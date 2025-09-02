@@ -83,7 +83,7 @@ set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
 set(install_namespace "Waylandpp")
 
 # C++ 11
-set(CMAKE_CXX_STANDARD 11)
+#set(CMAKE_CXX_STANDARD 11)
 
 # AdressSanitizer support
 set(CMAKE_C_FLAGS_ASAN "-fsanitize=address -fno-optimize-sibling-calls -fsanitize-address-use-after-scope -fno-omit-frame-pointer -g -O0")
@@ -153,6 +153,10 @@ if(BUILD_LIBRARIES)
     pkg_get_variable(WLR_PROTOCOLS_PKGDATADIR wlr-protocols pkgdatadir)
     message(STATUS "Use [wlr-protocols] protocols found at ${WLR_PROTOCOLS_PKGDATADIR}")
   endif()
+
+  # required gmock
+  #find_package(GTest REQUIRED CONFIG)
+  #include(GoogleTest)
 
   # generate protocol source/headers from protocol XMLs
   if(USE_SYSTEM_PROTOCOLS)

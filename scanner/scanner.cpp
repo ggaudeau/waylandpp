@@ -138,6 +138,33 @@ struct event_t : public element_t
     return ss.str();
   }
 
+  std::string print_mock(bool server) const
+  {
+    std::stringstream ss;
+    ss << "  MOCK_METHOD(std::function<void(";
+    for(auto const& arg : args)
+      ss << arg.print_type(server) + ", ";
+    if(!args.empty())
+      ss.str(ss.str().substr(0, ss.str().size()-2));
+    ss.seekp(0, std::ios_base::end);
+    ss << ")>&, on_" << name << ", (), (final)";
+    ss << ");";
+    return ss.str();
+  }
+
+  std::string print_override(bool server) const
+  {
+    std::stringstream ss;
+    ss << "  std::function<void(";
+    for(auto const& arg : args)
+      ss << arg.print_type(server) + ", ";
+    if(!args.empty())
+      ss.str(ss.str().substr(0, ss.str().size()-2));
+    ss.seekp(0, std::ios_base::end);
+    ss << ")>& on_" << name << "() override {return m_Events->" << name << ";}";
+    return ss.str();
+  }
+
   std::string print_dispatcher(int opcode, bool server) const
   {
     std::stringstream ss;
@@ -174,7 +201,7 @@ struct event_t : public element_t
     ss << description << std::endl
        << "  */" << std::endl;
 
-    ss << "  std::function<void(";
+    ss << "  virtual std::function<void(";
     for(auto const& arg : args)
       ss << arg.print_type(server) + ", ";
     if(!args.empty())
@@ -501,7 +528,7 @@ struct interface_t : public element_t
 
     ss << "class " << name << "_t : public proxy_t" << std::endl
        << "{" << std::endl
-       << "private:" << std::endl
+       << "protected:" << std::endl
        << "  struct events_t : public detail::events_base_t" << std::endl
        << "  {" << std::endl;
 
@@ -517,6 +544,7 @@ struct interface_t : public element_t
 
     ss << "public:" << std::endl
        << "  " << name << "_t();" << std::endl
+       << "  virtual ~" << name << "_t() = default;" << std::endl
        << "  explicit " << name << "_t(const proxy_t &proxy);" << std::endl
        << "  " << name << "_t(" << orig_name << " *p, wrapper_type t = wrapper_type::standard);" << std::endl
        << std::endl
@@ -541,6 +569,29 @@ struct interface_t : public element_t
 
     for(auto const& enumeration : enums)
       ss << enumeration.print_header(name) << std::endl;
+
+    return ss.str();
+  }
+
+  std::string print_client_mock() const
+  {
+    std::stringstream ss;
+    ss << "class mock_" << name << "_t : public " << name << "_t" << std::endl
+       << "{" << std::endl;
+
+    ss << "public:" << std::endl
+       << "  mock_" << name << "_t() = default;" << std::endl;
+    ss << std::endl;
+
+    for(auto const& event : events)
+      ss << event.print_override(false) << std::endl;
+    ss << std::endl;
+  
+    ss << "private:" << std::endl
+       << "  const std::shared_ptr<wayland::" << name << "_t::events_t> m_Events = std::make_shared<wayland::" << name << "_t::events_t>();" << std::endl;
+
+    ss << "};" << std::endl
+       << std::endl;
 
     return ss.str();
   }
@@ -1121,6 +1172,8 @@ int main(int argc, char *argv[])
               << "#include <memory>" << std::endl
               << "#include <string>" << std::endl
               << "#include <vector>" << std::endl
+//              << std::endl
+//              << "#include <gmock/gmock.h>" << std::endl
               << std::endl
               << (server ? "#include <wayland-server.hpp>" : "#include <wayland-client.hpp>") << std::endl;
 
@@ -1192,10 +1245,14 @@ int main(int argc, char *argv[])
   for(auto const& iface : interfaces)
     if(iface.name != "display")
     {
-      if(server)
+      if(server) {
         wayland_hpp << iface.print_server_header() << std::endl;
-      else
+      }
+      else {
         wayland_hpp << iface.print_client_header() << std::endl;
+        // TODO GEGE: generate mock in a separate file
+        wayland_hpp << iface.print_client_mock() << std::endl;
+      }
     }
   wayland_hpp << std::endl
               << "}" << std::endl;

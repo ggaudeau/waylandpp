@@ -35,6 +35,7 @@ function(define_library TARGET CFLAGS LIBRARIES HEADERS)
     PUBLIC_HEADER "${HEADERS}"
     VERSION "${PROJECT_VERSION}"
     SOVERSION ${PROJECT_VERSION_MAJOR})
+#    PRIVATE GTest::gmock)
   configure_file("${TARGET}.pc.in" "${TARGET}.pc" @ONLY)
   set_target_properties("${TARGET}" PROPERTIES RESOURCE "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.pc")
 endfunction()

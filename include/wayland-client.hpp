@@ -216,7 +216,7 @@ namespace wayland
                     int(*dispatcher)(uint32_t, const std::vector<detail::any>&, const std::shared_ptr<detail::events_base_t>&));
 
     // Retrieve the previously set user data
-    std::shared_ptr<detail::events_base_t> get_events();
+    virtual std::shared_ptr<detail::events_base_t> get_events();
 
     // Constructs NULL proxies.
     proxy_t() = default;

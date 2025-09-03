@@ -271,7 +271,7 @@ namespace wayland
         Special rules apply to proxy wrappers and foreign proxies.
         See \ref wrapper_type for more infos.
     */
-    ~proxy_t();
+    virtual ~proxy_t();
 
     /** \brief Get the id of a proxy object.
         \return The id the object associated with the proxy
